@@ -1,5 +1,4 @@
 ANSIBLE_DIR=./ansible
-FLUX_DIR=./flux
 
 ansible.ping:
 	ansible -i ${ANSIBLE_DIR}/inventory.ini all -m ping
@@ -11,4 +10,4 @@ flux.download:
 	flux install --export > ${FLUX_DIR}/base/flux-system.yaml
 
 flux.install:
-	kubectl apply -k ${FLUX_DIR}/overlay/
+	kubectl apply -k apps/overlay/prod/flux/
