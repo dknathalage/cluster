@@ -1,5 +1,5 @@
 ANSIBLE_DIR=./ansible
-KUSTOMIZE_DIR=./apps
+KUSTOMIZE_DIR=./kustomize
 
 ansible.ping:
 	ansible -i ${ANSIBLE_DIR}/inventory.ini all -m ping
