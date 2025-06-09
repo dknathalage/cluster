@@ -4,7 +4,6 @@ metadata:
   labels:
     service: postgres-n8n
   name: postgres
-  namespace: n8n
 spec:
   replicas: 1
   selector:
