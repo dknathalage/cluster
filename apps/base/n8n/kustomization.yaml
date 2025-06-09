@@ -5,7 +5,6 @@ resources:
   - n8n-claim0-persistentvolumeclaim.yaml
   - n8n-deployment.yaml
   - n8n-service.yaml
-  - namespace.yaml
   - postgres-claim0-persistentvolumeclaim.yaml
   - postgres-configmap.yaml
   - postgres-deployment.yaml
