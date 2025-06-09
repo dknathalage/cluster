@@ -26,3 +26,5 @@ ansible/retry/
 
 # Kubernetes temporary files
 kubeconfig* 
+
+tmp
