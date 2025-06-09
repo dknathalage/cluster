@@ -1,0 +1,28 @@
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Local development
+.env
+.env.local
+
+# Ansible temporary files
+ansible/retry/
+*.retry
+
+# Kubernetes temporary files
+kubeconfig* 

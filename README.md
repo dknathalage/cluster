@@ -72,13 +72,28 @@ After this, Flux will manage itself and all configurations from the `clusters/lo
 ## Flux Commands
 
 ```bash
+# Bootstrap Flux (one-time only)
+make flux.bootstrap
+
 # Check Flux status
+make flux.status
 flux get all
 
 # Force reconciliation
+make flux.reconcile
 flux reconcile source git flux-system
 
 # Suspend/resume a kustomization
 flux suspend kustomization cluster-apps-prod
 flux resume kustomization cluster-apps-prod
+```
+
+## Infrastructure Management
+
+```bash
+# Check cluster connectivity
+make ansible.ping
+
+# Set up Kubernetes cluster
+make ansible.cluster.setup
 ``` 
