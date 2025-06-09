@@ -16,7 +16,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: "./overlay/local/cluster"
+  path: "./apps/local/cluster"
   prune: true
   sourceRef:
     kind: GitRepository
@@ -29,7 +29,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: "./overlay/local/env/prod"
+  path: "./apps/local/env/prod"
   prune: true
   sourceRef:
     kind: GitRepository
@@ -42,7 +42,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: "./overlay/local/env/dev"
+  path: "./apps/local/env/dev"
   prune: true
   sourceRef:
     kind: GitRepository
