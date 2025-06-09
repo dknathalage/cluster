@@ -1,5 +1,4 @@
 ANSIBLE_DIR=./ansible
-OVERLAY_DIR=./overlay
 
 ansible.ping:
 	ansible -i ${ANSIBLE_DIR}/inventory.ini all -m ping
@@ -7,5 +6,5 @@ ansible.ping:
 ansible.cluster.setup:
 	ansible-playbook -i ${ANSIBLE_DIR}/inventory.ini ${ANSIBLE_DIR}/playbook/k8s-cluster-setup.yaml --ask-become-pass
 
-cluster.local.install:
-	kubectl apply -k ${OVERLAY_DIR}/local/cluster/
+cluster.local.flux:
+	kubectl apply -k flux/local/
