@@ -5,21 +5,29 @@ This repository implements a self-managing Flux architecture where Flux manages 
 ## Architecture
 
 ```
-├── bootstrap/                    # One-time manual installation
-│   ├── flux-system.yaml         # Flux components
-│   └── gotk-sync.yaml           # Bootstrap sync configuration
 ├── clusters/
-│   └── local/                   # Local cluster configuration
-│       ├── kustomization.yaml   # Main cluster kustomization
-│       └── flux-system/         # Flux self-management
+│   ├── base/
+│   │   └── bootstrap/           # Base Flux components (shared)
+│   │       ├── kustomization.yaml
+│   │       └── flux-system.yaml
+│   ├── local/                   # Local cluster configuration
+│   │   ├── bootstrap/           # Local cluster bootstrap
+│   │   │   ├── kustomization.yaml
+│   │   │   └── gotk-sync.yaml
+│   │   ├── kustomization.yaml   # Main cluster kustomization
+│   │   └── flux-system/         # Flux self-management
+│   │       ├── kustomization.yaml
+│   │       ├── gotk-sync.yaml   # Self-management sync
+│   │       ├── repos/           # GitRepository resources
+│   │       │   ├── kustomization.yaml
+│   │       │   └── cluster-repo.yaml
+│   │       └── apps/            # Application Kustomizations
+│   │           ├── kustomization.yaml
+│   │           └── cluster-apps.yaml
+│   └── staging/                 # Example staging cluster
+│       └── bootstrap/           # Staging-specific bootstrap
 │           ├── kustomization.yaml
-│           ├── gotk-sync.yaml   # Self-management sync
-│           ├── repos/           # GitRepository resources
-│           │   ├── kustomization.yaml
-│           │   └── cluster-repo.yaml
-│           └── apps/            # Application Kustomizations
-│               ├── kustomization.yaml
-│               └── cluster-apps.yaml
+│           └── gotk-sync.yaml
 └── apps/                        # Application definitions
     └── local/
         ├── cluster/             # Cluster-level applications
@@ -28,19 +36,33 @@ This repository implements a self-managing Flux architecture where Flux manages 
             └── dev/             # Development applications
 ```
 
-## One-Time Bootstrap
+## Cluster-Specific Bootstrap
 
-### Step 1: Install Flux Components
+### Bootstrap Local Cluster
 ```bash
-kubectl apply -f bootstrap/flux-system.yaml
+# One command bootstrap for local cluster
+make flux.bootstrap.local
+
+# Or manually with kubectl
+kubectl apply -k clusters/local/bootstrap
 ```
 
-### Step 2: Enable Self-Management
+### Bootstrap Other Clusters
 ```bash
-kubectl apply -f bootstrap/gotk-sync.yaml
+# For staging cluster
+kubectl apply -k clusters/staging/bootstrap
+
+# For production cluster (create clusters/prod/bootstrap first)
+kubectl apply -k clusters/prod/bootstrap
 ```
 
-After this, Flux will manage itself and all configurations from the `clusters/local/` directory.
+After bootstrap, Flux will manage itself and all configurations from the respective `clusters/<cluster-name>/` directory.
+
+### Adding New Clusters
+1. Create `clusters/<cluster-name>/bootstrap/` directory
+2. Copy and customize from `clusters/local/bootstrap/`
+3. Update the `gotk-sync.yaml` to point to the correct cluster path
+4. Run `kubectl apply -k clusters/<cluster-name>/bootstrap`
 
 ## Adding New Applications
 
@@ -64,23 +86,29 @@ After this, Flux will manage itself and all configurations from the `clusters/lo
 ## Key Benefits
 
 - **Self-Managing**: Flux manages its own configuration
+- **Cluster-Specific**: Each cluster has its own bootstrap and configuration
+- **Kustomize-Native**: Uses proper base/overlay pattern for configuration reuse
 - **Automatic**: New repos and apps are picked up automatically
 - **Organized**: Clear separation between system and application configs
 - **Scalable**: Easy to add new clusters, environments, or applications
+- **Multi-Cluster**: Support for different clusters with different configurations
 - **GitOps**: Everything is version controlled and auditable
 
 ## Flux Commands
 
 ```bash
-# Bootstrap Flux (one-time only)
-make flux.bootstrap
+# Bootstrap Flux for specific cluster
+make flux.bootstrap.local         # Bootstrap local cluster
+make flux.bootstrap               # Show available clusters
 
 # Check Flux status
-make flux.status
+make flux.status                  # Generic status
+make flux.status.local           # Local cluster status
 flux get all
 
 # Force reconciliation
-make flux.reconcile
+make flux.reconcile              # Generic reconcile
+make flux.reconcile.local        # Local cluster reconcile
 flux reconcile source git flux-system
 
 # Suspend/resume a kustomization
