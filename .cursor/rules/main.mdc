@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This is a fluxtomize setup for all of my kubernetes clusters. Its very important that the structure is maintained appropriately
+
+All my git configs can be found in `github.com/dknathalage/` repositories.
+
+I will defined where different applications get built and deployed from here.
