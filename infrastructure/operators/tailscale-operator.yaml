@@ -1,0 +1,38 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: tailscale
+  namespace: flux-system
+spec:
+  interval: 24h
+  url: https://pkgs.tailscale.com/helmcharts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: tailscale-operator
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 10m
+  chart:
+    spec:
+      chart: tailscale-operator
+      version: "1.x"
+      sourceRef:
+        kind: HelmRepository
+        name: tailscale
+        namespace: flux-system
+  targetNamespace: tailscale
+  install:
+    createNamespace: true
+  values:
+    # You'll need to provide your Tailscale OAuth client credentials
+    # Create a secret with your credentials:
+    # kubectl create secret generic operator-oauth --from-literal=client_id=your-client-id --from-literal=client_secret=your-client-secret -n tailscale
+    oauth:
+      clientId: ""
+      clientSecret: ""
+    # Alternatively, you can reference an existing secret:
+    # operatorConfig:
+    #   defaultTags: ["k8s"] 
