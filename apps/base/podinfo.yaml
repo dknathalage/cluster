@@ -23,7 +23,8 @@ spec:
         name: podinfo
         namespace: flux-system
   targetNamespace: podinfo
-  createNamespace: true
+  install:
+    createNamespace: true
   values:
     replicaCount: 2
     resources:

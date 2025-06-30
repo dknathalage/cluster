@@ -23,7 +23,8 @@ spec:
         name: ingress-nginx
         namespace: flux-system
   targetNamespace: ingress-nginx
-  createNamespace: true
+  install:
+    createNamespace: true
   values:
     controller:
       service:
