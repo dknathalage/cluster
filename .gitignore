@@ -1,0 +1,30 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment files (if you create any)
+.env
+.env.local
+
+# Flux bootstrap generates these files
+clusters/*/flux-system/gotk-components.yaml
+clusters/*/flux-system/gotk-sync.yaml 

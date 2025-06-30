@@ -1,0 +1,34 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://stefanprodan.github.io/podinfo
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: podinfo
+      version: "6.x"
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+        namespace: flux-system
+  targetNamespace: podinfo
+  createNamespace: true
+  values:
+    replicaCount: 2
+    resources:
+      limits:
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi 
