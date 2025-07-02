@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+data:
+  config.yaml: |
+    tunnel: 0c6401eb-1e2c-4250-a875-a311e7eabe7c
+    credentials-file: /etc/cloudflared/creds/credentials.json
+    
+    ingress:
+      # Route dknathalage.dev to simple frontend
+      - hostname: dknathalage.dev
+        service: http://simple-frontend-service.default.svc.cluster.local:80
+      
+      # Route www.dknathalage.dev to simple frontend  
+      - hostname: www.dknathalage.dev
+        service: http://simple-frontend-service.default.svc.cluster.local:80
+      
+      # Catch-all rule (required)
+      - service: http_status:404 
