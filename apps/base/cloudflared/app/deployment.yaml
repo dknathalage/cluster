@@ -36,11 +36,11 @@ spec:
           readOnly: true
         livenessProbe:
           httpGet:
-            path: /ready
-            port: 2000
-          failureThreshold: 1
-          initialDelaySeconds: 10
-          periodSeconds: 10
+            path: /metrics
+            port: 20241
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 30
         resources:
           requests:
             memory: "64Mi"
