@@ -9,9 +9,5 @@ data:
       - hostname: dknathalage.dev
         service: http://simple-frontend-service.default.svc.cluster.local:80
       
-      # Route www.dknathalage.dev to simple frontend  
-      - hostname: www.dknathalage.dev
-        service: http://simple-frontend-service.default.svc.cluster.local:80
-      
       # Catch-all rule (required)
       - service: http_status:404 
