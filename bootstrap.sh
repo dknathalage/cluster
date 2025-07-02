@@ -6,10 +6,10 @@ set -e
 # This script bootstraps Flux v2 on a Kubernetes cluster
 
 # Configuration
-export GITHUB_USER="${GITHUB_USER:-your-github-username}"
+export GITHUB_USER="${GITHUB_USER:-dknathalage}"
 export GITHUB_TOKEN="${GITHUB_TOKEN}"
 export GITHUB_REPO="${GITHUB_REPO:-cluster}"
-export CLUSTER_NAME="${CLUSTER_NAME:-production}"
+export CLUSTER_NAME="${CLUSTER_NAME:-local}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -78,7 +78,6 @@ bootstrap_flux() {
 apply_workloads() {
     log_info "Applying infrastructure and applications..."
     
-    kubectl apply -f clusters/$CLUSTER_NAME/infrastructure.yaml
     kubectl apply -f clusters/$CLUSTER_NAME/apps.yaml
     
     log_info "Workloads applied"
