@@ -1,0 +1,219 @@
+# Tailscale Custom Resource Definitions
+# These define the custom resources that the Tailscale operator manages
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: connectors.tailscale.com
+spec:
+  group: tailscale.com
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              hostname:
+                type: string
+              tags:
+                type: array
+                items:
+                  type: string
+              acceptRoutes:
+                type: boolean
+              advertiseRoutes:
+                type: array
+                items:
+                  type: string
+              exitNode:
+                type: boolean
+              subnetRouter:
+                type: boolean
+          status:
+            type: object
+            properties:
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    message:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                      format: date-time
+  scope: Namespaced
+  names:
+    plural: connectors
+    singular: connector
+    kind: Connector
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: proxyclasses.tailscale.com
+spec:
+  group: tailscale.com
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              tags:
+                type: array
+                items:
+                  type: string
+              metrics:
+                type: object
+                properties:
+                  enable:
+                    type: boolean
+              statefulSet:
+                type: object
+                properties:
+                  labels:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  annotations:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  pod:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        additionalProperties:
+                          type: string
+                      annotations:
+                        type: object
+                        additionalProperties:
+                          type: string
+                      tailscaleContainer:
+                        type: object
+                        properties:
+                          resources:
+                            type: object
+                            properties:
+                              requests:
+                                type: object
+                                additionalProperties:
+                                  type: string
+                              limits:
+                                type: object
+                                additionalProperties:
+                                  type: string
+                          securityContext:
+                            type: object
+                            properties:
+                              runAsUser:
+                                type: integer
+                              runAsGroup:
+                                type: integer
+                              runAsNonRoot:
+                                type: boolean
+                              readOnlyRootFilesystem:
+                                type: boolean
+                              allowPrivilegeEscalation:
+                                type: boolean
+                              capabilities:
+                                type: object
+                                properties:
+                                  drop:
+                                    type: array
+                                    items:
+                                      type: string
+                                  add:
+                                    type: array
+                                    items:
+                                      type: string
+          status:
+            type: object
+            properties:
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    message:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                      format: date-time
+  scope: Cluster
+  names:
+    plural: proxyclasses
+    singular: proxyclass
+    kind: ProxyClass
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: dnsconfigs.tailscale.com
+spec:
+  group: tailscale.com
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              nameserver:
+                type: object
+                properties:
+                  image:
+                    type: object
+                    properties:
+                      repo:
+                        type: string
+                      tag:
+                        type: string
+          status:
+            type: object
+            properties:
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    message:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                      format: date-time
+  scope: Cluster
+  names:
+    plural: dnsconfigs
+    singular: dnsconfig
+    kind: DNSConfig

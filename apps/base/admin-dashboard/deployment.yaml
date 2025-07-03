@@ -1,0 +1,40 @@
+# Example admin dashboard - this will be PRIVATE only
+# This demonstrates how to deploy a family-only service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-dashboard
+  labels:
+    app: admin-dashboard
+    tier: private
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-dashboard
+  template:
+    metadata:
+      labels:
+        app: admin-dashboard
+        tier: private
+    spec:
+      containers:
+      - name: admin-dashboard
+        # Using a simple web server as an example
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /usr/share/nginx/html
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+      volumes:
+      - name: config
+        configMap:
+          name: admin-dashboard-config

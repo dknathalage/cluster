@@ -1,0 +1,27 @@
+# Private admin dashboard service - FAMILY ONLY
+# This demonstrates a service that should NEVER be publicly accessible
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-dashboard-service
+  annotations:
+    # Enable Tailscale exposure
+    tailscale.com/expose: "true"
+    # NO funnel annotation = private only (family access via Tailscale)
+    # tailscale.com/funnel: "true"  # <- INTENTIONALLY COMMENTED OUT
+    # Custom hostname for easy access
+    tailscale.com/hostname: "admin-dashboard"
+    # Tags for access control - only family members
+    tailscale.com/tags: "tag:k8s,tag:private,tag:family"
+  labels:
+    app: admin-dashboard
+    tier: private
+    access: family-only
+spec:
+  selector:
+    app: admin-dashboard
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  type: ClusterIP

@@ -1,0 +1,26 @@
+# Tailscale-enabled version of simple-frontend service
+# This will be exposed via Tailscale Funnel for public access
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-frontend-tailscale
+  annotations:
+    # Enable Tailscale exposure
+    tailscale.com/expose: "true"
+    # Enable Funnel for public internet access
+    tailscale.com/funnel: "true"
+    # Custom hostname for the service
+    tailscale.com/hostname: "simple-frontend"
+    # Tags for access control
+    tailscale.com/tags: "tag:k8s,tag:public"
+  labels:
+    app: simple-frontend
+    tier: public
+spec:
+  selector:
+    app: simple-frontend
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  type: ClusterIP

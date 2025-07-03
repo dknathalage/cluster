@@ -1,24 +1,40 @@
 # Flux GitOps Cluster Configuration
 
-This repository contains the GitOps configuration for managing Kubernetes clusters using [Flux v2](https://fluxcd.io/) with Kustomize.
+This repository contains the GitOps configuration for managing Kubernetes clusters using [Flux v2](https://fluxcd.io/) with Kustomize. This setup follows an "everything is an app" approach where all components, including infrastructure, are treated as applications.
 
 ## Repository Structure
 
 ```
 cluster/
 ├── clusters/
-│   └── production/                 # Production cluster configuration
+│   └── local/                     # Local cluster configuration
 │       ├── flux-system/           # Flux system components
-│       ├── infrastructure.yaml    # Infrastructure kustomizations
 │       └── apps.yaml             # Application kustomizations
-├── infrastructure/
-│   ├── controllers/              # Infrastructure controllers (ingress, cert-manager, etc.)
-│   └── configs/                  # Infrastructure configurations
 ├── apps/
-│   ├── base/                    # Base application manifests
-│   └── production/              # Production-specific overlays
-└── bootstrap.sh                 # Bootstrap script
+│   ├── base/                     # Base application manifests
+│   │   ├── simple-frontend/      # Example frontend application
+│   │   └── cloudflared/          # Cloudflare tunnel app
+│   └── overlays/
+│       └── local/                # Local environment overlays
+│           ├── kustomization.yaml
+│           ├── simple-frontend/   # Local frontend overrides
+│           └── cloudflared/       # Local tunnel overrides
+├── bootstrap.sh                  # Bootstrap script
+├── CLOUDFLARE_TUNNEL_SETUP.md   # Cloudflare tunnel setup guide
+└── TUNNEL_DASHBOARD_UPDATE.md    # Tunnel dashboard update guide
 ```
+
+## Everything is an App Philosophy
+
+In this setup, we treat all components as applications:
+- **Infrastructure components** (ingress controllers, cert-manager, monitoring) are apps
+- **Application services** (frontend, backend, databases) are apps
+- **Utilities** (tunnels, dashboards, tools) are apps
+
+This approach provides:
+- **Consistency**: All components follow the same deployment pattern
+- **Simplicity**: One way to manage everything
+- **Flexibility**: Easy to customize per environment using Kustomize overlays
 
 ## Prerequisites
 
@@ -37,7 +53,7 @@ Fork this repository to your GitHub account.
 export GITHUB_USER="your-github-username"
 export GITHUB_TOKEN="your-github-token"
 export GITHUB_REPO="cluster"
-export CLUSTER_NAME="production"
+export CLUSTER_NAME="local"
 ```
 
 ### 3. Run Bootstrap Script
@@ -54,8 +70,8 @@ flux check
 # Check kustomizations
 flux get kustomizations
 
-# Check helm releases
-flux get helmreleases -A
+# Check all resources
+kubectl get all -A
 ```
 
 ## Manual Bootstrap (Alternative)
@@ -68,65 +84,97 @@ flux bootstrap github \
   --owner=$GITHUB_USER \
   --repository=$GITHUB_REPO \
   --branch=main \
-  --path=./clusters/production \
+  --path=./clusters/local \
   --personal
-
-# Apply workloads
-kubectl apply -f clusters/production/infrastructure.yaml
-kubectl apply -f clusters/production/apps.yaml
 ```
 
 ## Adding New Applications
 
-### 1. Add Helm Application
-Create a new file in `apps/base/`:
+### 1. Create Base Application
+Create a new directory in `apps/base/`:
 
-```yaml
-# apps/base/my-app.yaml
-apiVersion: source.toolkit.fluxcd.io/v1beta2
-kind: HelmRepository
-metadata:
-  name: my-app
-  namespace: flux-system
-spec:
-  interval: 5m
-  url: https://charts.example.com
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: my-app
-  namespace: flux-system
-spec:
-  interval: 30m
-  chart:
-    spec:
-      chart: my-app
-      version: "1.x"
-      sourceRef:
-        kind: HelmRepository
-        name: my-app
-        namespace: flux-system
-  targetNamespace: my-app
-  createNamespace: true
-  values:
-    # Your values here
+```bash
+mkdir -p apps/base/my-app
 ```
 
-### 2. Update Kustomization
-Add the new app to `apps/base/kustomization.yaml`:
+Create the application manifests:
 
 ```yaml
+# apps/base/my-app/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 resources:
-- podinfo.yaml
-- my-app.yaml  # Add this line
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+
+# apps/base/my-app/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app
+        image: my-app:latest
+        ports:
+        - containerPort: 8080
 ```
 
-## Adding Infrastructure Components
+### 2. Add to Overlay
+Add your app to the local overlay:
 
-1. Create YAML files in `infrastructure/controllers/` or `infrastructure/configs/`
-2. Update the respective `kustomization.yaml` file
-3. Commit and push changes
+```bash
+mkdir -p apps/overlays/local/my-app
+```
+
+Create overlay configuration:
+```yaml
+# apps/overlays/local/my-app/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../base/my-app
+patchesStrategicMerge:
+  - deployment-patch.yaml
+```
+
+### 3. Update Main Kustomization
+Add the new app to `apps/overlays/local/kustomization.yaml`:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - cloudflared
+  - simple-frontend
+  - my-app  # Add this line
+```
+
+## Adding Infrastructure as Apps
+
+Infrastructure components are added the same way as regular apps:
+
+### Example: Adding an Ingress Controller
+1. Create `apps/base/nginx-ingress/`
+2. Add Helm repository and release manifests
+3. Create overlay in `apps/overlays/local/nginx-ingress/`
+4. Add to the main kustomization
+
+### Example: Adding Monitoring
+1. Create `apps/base/monitoring/`
+2. Add Prometheus, Grafana, and AlertManager manifests
+3. Create environment-specific overlays
+4. Add to the main kustomization
 
 ## Monitoring and Troubleshooting
 
@@ -137,9 +185,6 @@ flux check
 
 # Kustomizations status
 flux get kustomizations
-
-# Helm releases status
-flux get helmreleases -A
 
 # Sources status
 flux get sources all -A
@@ -153,26 +198,38 @@ flux logs --level=error --all-namespaces
 # Specific controller logs
 kubectl logs -n flux-system deployment/source-controller
 kubectl logs -n flux-system deployment/kustomize-controller
-kubectl logs -n flux-system deployment/helm-controller
 ```
 
 ### Common Issues
 
-1. **GitHub Rate Limiting**: Increase sync interval or use GitHub App
-2. **Resource Conflicts**: Check for duplicate resources across kustomizations
-3. **Helm Chart Issues**: Verify chart versions and values
+1. **GitHub Rate Limiting**: Increase sync interval in kustomization specs
+2. **Resource Conflicts**: Check for duplicate resources across apps
+3. **Kustomization Failures**: Check paths and resource references
 
 ## Security Considerations
 
 - Store sensitive data in Kubernetes Secrets
 - Use Sealed Secrets or SOPS for encrypting secrets in Git
-- Implement proper RBAC policies
-- Regularly update Flux components
+- Implement proper RBAC policies for each app
+- Regularly update Flux components and app images
+
+## Environment Management
+
+The overlay structure allows for easy environment management:
+- `apps/overlays/local/` - Local development environment
+- `apps/overlays/staging/` - Staging environment (can be added)
+- `apps/overlays/production/` - Production environment (can be added)
+
+Each environment can have different:
+- Resource limits
+- Replica counts
+- Configuration values
+- Secrets and ConfigMaps
 
 ## Contributing
 
 1. Create a feature branch
-2. Make your changes
+2. Add or modify apps in the appropriate directories
 3. Test in a development cluster
 4. Submit a pull request
 
