@@ -118,41 +118,75 @@ Family Devices → Tailscale Mesh → Kubernetes
 
 **Why OAuth over Auth Keys**: OAuth provides better security, automatic token refresh, and granular permissions. Perfect for production homelab use.
 
-### Step 2: Deploy Tailscale Operator
+### Step 2: Deploy Tailscale Operator (Helm + Flux)
 
-**Thought Process**: The Tailscale Kubernetes operator will manage Tailscale connections for our services. It creates proxy pods automatically and handles the networking complexity.
+**Thought Process**: Using the official Tailscale Helm chart with Flux provides better maintainability, automatic updates, and follows GitOps best practices. The Helm chart is maintained by Tailscale and includes all necessary resources.
+
+**Why Helm over Raw YAML**:
+- ✅ **Official Support**: Maintained by Tailscale team
+- ✅ **Automatic Updates**: Flux can handle chart version updates
+- ✅ **Configuration Management**: Values-based configuration
+- ✅ **GitOps Integration**: Perfect fit with your existing Flux setup
 
 **Created Files**:
-- `apps/base/tailscale/app/namespace.yaml` - Dedicated namespace with privileged security
-- `apps/base/tailscale/app/crds.yaml` - Custom resource definitions for Tailscale
-- `apps/base/tailscale/app/operator.yaml` - Main operator deployment
-- `apps/base/tailscale/kustomization.yaml` - Kustomize configuration
+- `apps/base/tailscale/helm-repository.yaml` - Official Tailscale Helm repository
+- `apps/base/tailscale/namespace.yaml` - Dedicated namespace with proper security labels
+- `apps/base/tailscale/oauth-secret.yaml` - OAuth credentials template
+- `apps/base/tailscale/helm-release.yaml` - Flux HelmRelease configuration
+- `apps/base/tailscale/kustomization.yaml` - Kustomize configuration for Flux
+- `apps/overlays/local/tailscale/` - Local development overlay
 
-**Deploy Commands**:
+**Helm Chart Configuration**:
+```yaml
+# Key values from helm-release.yaml
+values:
+  oauth:
+    existingSecret: "operator-oauth"  # Reference to our secret
+  operatorConfig:
+    hostname: "tailscale-operator"
+    logging: "info"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  securityContext:
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+```
+
+**GitOps Deployment** (No Scripts Needed!):
 ```bash
-# Deploy CRDs first
-kubectl apply -f apps/base/tailscale/app/crds.yaml
-
-# Create namespace
-kubectl apply -f apps/base/tailscale/app/namespace.yaml
-
-# Create OAuth secret (replace with your credentials)
+# 1. Create OAuth secret manually (DO NOT commit to Git)
 kubectl create secret generic operator-oauth \
-  --from-literal=client_id=YOUR_CLIENT_ID \
-  --from-literal=client_secret=YOUR_CLIENT_SECRET \
-  --namespace=tailscale-system
+  --from-literal=client_id=your_client_id \
+  --from-literal=client_secret=your_client_secret \
+  --namespace=tailscale
 
-# Deploy the operator
-kubectl apply -f apps/base/tailscale/app/operator.yaml
+# 2. Commit Tailscale configuration to Git
+git add apps/base/tailscale/ apps/overlays/local/kustomization.yaml
+git commit -m "Add Tailscale operator with Helm and Flux"
+git push
+
+# 3. Watch Flux deploy everything automatically
+flux get kustomizations -w
 ```
 
 **Verification**:
 ```bash
-# Check operator is running
-kubectl get pods -n tailscale-system
+# Check Flux HelmRepository
+kubectl get helmrepository tailscale -n flux-system
+
+# Check Flux HelmRelease
+kubectl get helmrelease tailscale-operator -n tailscale
+
+# Check operator pods
+kubectl get pods -n tailscale
 
 # Check operator logs
-kubectl logs -n tailscale-system deployment/tailscale-operator
+kubectl logs -n tailscale deployment/tailscale-operator
 ```
 
 ### Step 3: Configure Services for Tailscale
@@ -280,11 +314,13 @@ kubectl get pods -A | grep ts-
 
 ## Created Files Summary
 
-### Tailscale Infrastructure
-- `apps/base/tailscale/app/namespace.yaml` - Dedicated namespace with privileged access
-- `apps/base/tailscale/app/crds.yaml` - Custom Resource Definitions for Tailscale
-- `apps/base/tailscale/app/operator.yaml` - Main Tailscale operator deployment
-- `apps/base/tailscale/kustomization.yaml` - Kustomize configuration for Tailscale
+### Tailscale Infrastructure (Helm + Flux)
+- `apps/base/tailscale/helm-repository.yaml` - Official Tailscale Helm repository
+- `apps/base/tailscale/namespace.yaml` - Dedicated namespace with proper security labels
+- `apps/base/tailscale/oauth-secret.yaml` - OAuth credentials secret
+- `apps/base/tailscale/helm-release.yaml` - Flux HelmRelease for operator deployment
+- `apps/base/tailscale/kustomization.yaml` - Kustomize configuration for Flux
+- `apps/overlays/local/tailscale/` - Local development overlay
 
 ### Service Configurations
 - `apps/base/simple-frontend/service-tailscale.yaml` - Public service with Funnel enabled
@@ -294,10 +330,11 @@ kubectl get pods -A | grep ts-
   - `configmap.yaml` - Dashboard content
   - `kustomization.yaml` - Kustomize configuration
 
-### Automation and Documentation
-- `deploy-tailscale.sh` - Automated deployment script
-- `FAMILY_ONBOARDING.md` - Family member guide for accessing services
+### Documentation and GitOps
+- `GITOPS_SETUP.md` - Pure GitOps deployment guide (no scripts needed!)
+- `FAMILY_ONBOARDING.md` - Family member guide for accessing services  
 - `TESTING_VALIDATION.md` - Comprehensive testing procedures
+- `HELM_TESTING.md` - Helm-specific testing procedures
 
 ## Migration Benefits Achieved
 
@@ -332,11 +369,18 @@ kubectl get pods -A | grep ts-
    - Create OAuth client with `devices` and `all` scopes
    - Save Client ID and Client Secret
 
-2. **Deploy Tailscale**:
+2. **Deploy Tailscale via GitOps**:
    ```bash
-   export TAILSCALE_CLIENT_ID=your_client_id
-   export TAILSCALE_CLIENT_SECRET=your_client_secret
-   ./deploy-tailscale.sh
+   # Create OAuth secret (manual step - don't commit to Git)
+   kubectl create secret generic operator-oauth \
+     --from-literal=client_id=your_client_id \
+     --from-literal=client_secret=your_client_secret \
+     --namespace=tailscale
+   
+   # Commit and push configuration
+   git add apps/base/tailscale/ apps/overlays/local/kustomization.yaml
+   git commit -m "Add Tailscale operator with Helm and Flux"
+   git push
    ```
 
 3. **Configure ACLs**:

@@ -1,0 +1,74 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: tailscale-operator
+  namespace: tailscale
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: tailscale-operator
+      version: "1.74.1"  # Pin to a specific version for stability
+      sourceRef:
+        kind: HelmRepository
+        name: tailscale
+        namespace: flux-system
+      interval: 15m
+  install:
+    createNamespace: false  # We create the namespace separately for proper labels
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # OAuth configuration - references the secret we created
+    oauth:
+      clientId: ""  # Will be set via existingSecret
+      clientSecret: ""  # Will be set via existingSecret
+      existingSecret: "operator-oauth"
+    
+    # Operator configuration
+    operatorConfig:
+      hostname: "tailscale-operator"
+      logging: "info"
+      image:
+        tag: "latest"  # Use stable tag in production
+      
+    # Proxy configuration for services
+    proxyConfig:
+      image:
+        tag: "latest"  # Use stable tag in production
+      
+    # RBAC and security
+    rbac:
+      create: true
+    
+    serviceAccount:
+      create: true
+      name: "tailscale-operator"
+    
+    # Resource limits for the operator
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    
+    # Node selector and tolerations if needed
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    
+    # Security context
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
