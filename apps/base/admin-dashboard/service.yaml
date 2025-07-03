@@ -1,5 +1,6 @@
 # Private admin dashboard service - FAMILY ONLY
 # This demonstrates a service that should NEVER be publicly accessible
+# DNS: *.pvt.dknathalage.dev → admin.tail2af8c3.ts.net
 apiVersion: v1
 kind: Service
 metadata:
@@ -9,14 +10,15 @@ metadata:
     tailscale.com/expose: "true"
     # NO funnel annotation = private only (family access via Tailscale)
     # tailscale.com/funnel: "true"  # <- INTENTIONALLY COMMENTED OUT
-    # Custom hostname for easy access
-    tailscale.com/hostname: "admin-dashboard"
+    # Custom hostname for easy access (creates admin.tail2af8c3.ts.net)
+    tailscale.com/hostname: "admin"
     # Tags for access control - only family members
     tailscale.com/tags: "tag:k8s,tag:private,tag:family"
   labels:
     app: admin-dashboard
     tier: private
     access: family-only
+    dns-strategy: private
 spec:
   selector:
     app: admin-dashboard
