@@ -1,0 +1,30 @@
+# Private Service Template with Tailscale + External DNS
+# Usage: Copy this template and replace <SERVICE_NAME> with your actual service name
+apiVersion: v1
+kind: Service
+metadata:
+  name: <SERVICE_NAME>-tailscale
+  annotations:
+    # Tailscale configuration
+    tailscale.com/expose: "true"
+    # No funnel annotation - private access only
+    tailscale.com/hostname: "<SERVICE_NAME>"
+    tailscale.com/tags: "tag:k8s,tag:private,tag:family"
+    
+    # External-DNS for private domain resolution
+    external-dns.alpha.kubernetes.io/hostname: "<SERVICE_NAME>.dknathalage.dev"
+    external-dns.alpha.kubernetes.io/target: "<SERVICE_NAME>.tail2af8c3.ts.net"
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+    external-dns.alpha.kubernetes.io/ttl: "300"
+  labels:
+    app: <SERVICE_NAME>
+    tier: private
+    dns-strategy: private-dns
+spec:
+  selector:
+    app: <SERVICE_NAME>
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  type: ClusterIP

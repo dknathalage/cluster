@@ -4,3 +4,4 @@ resources:
   - "../../base/admin-dashboard"
   - "../../base/simple-frontend"
   - ../../base/tailscale
+  - ../../base/external-dns

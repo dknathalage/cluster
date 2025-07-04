@@ -14,11 +14,17 @@ metadata:
     tailscale.com/hostname: "admin"
     # Tags for access control - only family members
     tailscale.com/tags: "tag:k8s,tag:private,tag:family"
+    
+    # External-DNS for private domain resolution
+    external-dns.alpha.kubernetes.io/hostname: "admin.dknathalage.dev"
+    external-dns.alpha.kubernetes.io/target: "admin.tail2af8c3.ts.net"
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+    external-dns.alpha.kubernetes.io/ttl: "300"
   labels:
     app: admin-dashboard
     tier: private
     access: family-only
-    dns-strategy: private
+    dns-strategy: private-dns
 spec:
   selector:
     app: admin-dashboard

@@ -1,29 +1,28 @@
-# Tailscale-enabled version of simple-frontend service
-# This will be exposed via Tailscale Funnel for public access
-# DNS: Automatically managed by External-DNS
+# Public Service Template with Tailscale + External DNS
+# Usage: Copy this template and replace <SERVICE_NAME> with your actual service name
 apiVersion: v1
 kind: Service
 metadata:
-  name: simple-frontend-tailscale
+  name: <SERVICE_NAME>-tailscale
   annotations:
     # Tailscale configuration
     tailscale.com/expose: "true"
     tailscale.com/funnel: "true"
-    tailscale.com/hostname: "frontend"
+    tailscale.com/hostname: "<SERVICE_NAME>"
     tailscale.com/tags: "tag:k8s,tag:public"
     
     # External-DNS automatic DNS management
-    external-dns.alpha.kubernetes.io/hostname: "frontend.dknathalage.dev"
-    external-dns.alpha.kubernetes.io/target: "frontend.tail2af8c3.ts.net"
+    external-dns.alpha.kubernetes.io/hostname: "<SERVICE_NAME>.dknathalage.dev"
+    external-dns.alpha.kubernetes.io/target: "<SERVICE_NAME>.tail2af8c3.ts.net"
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
     external-dns.alpha.kubernetes.io/ttl: "300"
   labels:
-    app: simple-frontend
+    app: <SERVICE_NAME>
     tier: public
     dns-strategy: automatic
 spec:
   selector:
-    app: simple-frontend
+    app: <SERVICE_NAME>
   ports:
   - port: 80
     targetPort: 80
